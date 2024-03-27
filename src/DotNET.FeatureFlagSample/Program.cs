@@ -1,8 +1,26 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using DotNET.FeatureFlagSample.Data;
+using Microsoft.FeatureManagement;
+using DotNET.FeatureFlagSample.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Retrieve the App Config connection string
+string AppConfigConnectionString = builder.Configuration.GetConnectionString("AppConfig");
+
+// Load configuration from Azure App Configuration
+builder.Configuration.AddAzureAppConfiguration(options =>
+{
+    options.Connect(AppConfigConnectionString);
+    options.UseFeatureFlags();
+});
+
+// Add Azure App Configuration middleware to the container of services
+builder.Services.AddAzureAppConfiguration();
+
+// Add feature management to the container of services
+builder.Services.AddFeatureManagement().WithTargeting<UserTargetingContextAccessor>(); ;
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -14,7 +32,11 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+
 var app = builder.Build();
+
+// Use Azure App Configuration middleware for dynamic configuration refresh
+app.UseAzureAppConfiguration();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

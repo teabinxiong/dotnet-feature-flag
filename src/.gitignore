@@ -482,3 +482,12 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+
+# Specific to the EFCore-Blazor sample app
+*.db
+*.db-shm
+*.db-wal
+
+_build/
+_site/
